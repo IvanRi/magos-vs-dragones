@@ -16,8 +16,8 @@
             <div class="curarthbar">
                 <div class="curarthbar text-center" 
                 style="background-color: goldenrod; margin: 0; color: white;"
-                :style="{width: saludMago + '%'}">
-                salud del mago
+                :style="{width: mago.vida + '%'}">
+                {{mago.vida}}%
                 </div>
             </div>
         </div>
@@ -26,9 +26,9 @@
             <div class="curarthbar">
                 <div class="curarthbar text-center" 
                     style="background-color: rgb(3, 110, 12); margin: 0; color: white;"
-                    :style="{width: saludDragon + '%'}"
+                    :style="{width: dragon.vida + '%'}"
                     >
-                    salud del dragon
+                    {{dragon.vida}}%
                 </div>
             </div></div>
     </section>
@@ -41,25 +41,110 @@
     <section class="row controls" v-else>
         <div class="small-12 columns">
             <button id="atacar" @click="atacar">ATACAR</button>
-            <button id="ataque-especial" @click="ataqueEspecial">ATAQUE ESPECIAL</button>
+            <button id="ataque-especial" @click="ataqueEspecial" :disabled="!isAvailable()">ATAQUE ESPECIAL</button>
             <button id="curar" @click="curar">CURAR</button>
             <button id="rendirse" @click="terminarPartida">RENDIRSE</button>
         </div>
     </section>
-    <section class="row log" v-if="turnos.length > 0">
+    <section class="row log" v-if="logdeAtaques.length > 0">
         <div class="small-12 columns">
 
             <ul>
-                <li v-for="(turno,index) in turnos"
+                <li v-for="(turno,index) in logdeAtaques"
                 :class="cssParaLaFila(turno)"
                 :style="{'text-align': turno.esMago?'left':'right','opacity':index <=1?1:0.3}">
-                    {{ turno.text }} 
+                    {{ turno.text }} {{turno.value}}
                 </li>
             </ul>
             
         </div>
     </section>
 </div>
+    <script>
+        new Vue({
+            el:'#app',
+            data: {
+                contAtaquesEsp: 0,
+                mago: {
+                    vida: 100,
+                    rangoAtq: [3,10],
+                    atqEspecial: [10,20],
+                    curacion: 10
+                },
+                dragon: {
+                    vida: 100,
+                    rangoAtq: [5,12],
+                    atqEspecial: null
+                },
+                logdeAtaques: [],
+                hayUnaPartidaEnJuego: false
+            },
+            methods: {
+                curar(){
+                    const valorAtqDragon = this.atacarPersonaje(this.dragon.rangoAtq)
+                    this.mago.vida = this.mago.vida - valorAtqDragon + this.mago.curacion
+
+                    this.generarLog(this.mago.curacion, valorAtqDragon, true)
+                },
+                isAvailable(){
+                    const ATQ_MAX_CONT = 2
+                    return this.contAtaquesEsp < ATQ_MAX_CONT
+                },
+                atacarPersonaje(rango){
+                    const min = rango[0]
+                    const max = rango[1]
+                    return Math.ceil(Math.random() * (max - min) + min)
+                },
+                generarLog(magoAtq, dragonAtq, esUnaCuracion){
+                    const textMago = esUnaCuracion ? "el mago se curo: " : "ataque del mago es de"
+                    const log1 = {
+                        esMago: true,
+                        value: magoAtq,
+                        text: textMago
+                    }
+                    const log2 = {
+                        esMago: false,
+                        value: dragonAtq,
+                        text:"ataque del dragon es de "
+                    }
+
+                    const arrAux = [...this.logdeAtaques]
+                    arrAux.splice(0,0,log1)
+                    arrAux.splice(0,0,log2)
+                    this.logdeAtaques = arrAux
+                },
+                rendirse(){},
+                atacar(){
+                    const valorAtqMago = this.atacarPersonaje(this.mago.rangoAtq)
+                    const valorAtqDragon = this.atacarPersonaje(this.dragon.rangoAtq)
+                    this.mago.vida = this.mago.vida - valorAtqDragon
+                    this.dragon.vida = this.dragon.vida - valorAtqMago
+
+                    this.generarLog(valorAtqMago, valorAtqDragon)
+                    
+                },
+                empezarPartida(){
+                    this.mago.vida = 100;
+                    this.dragon.vida = 100;
+                    this.contAtaquesEsp = 0;
+                    this.hayUnaPartidaEnJuego = true;
+                },
+                cssParaLaFila(turno){
+                    return turno.esMago ? 'player-turno' : 'monster-turno';
+                },
+                terminarPartida(){},
+                ataqueEspecial(){
+                    const valorAtqMago = this.atacarPersonaje(this.mago.atqEspecial)
+                    const valorAtqDragon = this.atacarPersonaje(this.dragon.rangoAtq)
+                    this.mago.vida = this.mago.vida - valorAtqDragon
+                    this.dragon.vida = this.dragon.vida - valorAtqMago
+                    this.contAtaquesEsp++
+
+                    this.generarLog(valorAtqMago, valorAtqDragon)
+                },
+            }
+        })
+    </script>
 <!-- <script src="app.js"></script> -->
 </body>
 </html>
