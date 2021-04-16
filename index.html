@@ -1,4 +1,4 @@
-<!DOCTYPE html>
++<!DOCTYPE html>
 <html>
 <head>
     <title>Magos vs Dragones</title>
@@ -50,7 +50,7 @@
         <div class="small-12 columns">
 
             <ul>
-                <li v-for="(turno,index) in logdeAtaques"
+        <li v-for="(turno,index) in logdeAtaques"
                 :class="cssParaLaFila(turno)"
                 :style="{'text-align': turno.esMago?'left':'right','opacity':index <=1?1:0.3}">
                     {{ turno.text }} {{turno.value}}
@@ -82,9 +82,13 @@
             methods: {
                 curar(){
                     const valorAtqDragon = this.atacarPersonaje(this.dragon.rangoAtq)
-                    this.mago.vida = this.mago.vida - valorAtqDragon + this.mago.curacion
+                   const proxValor = this.mago.vida - valorAtqDragon + this.mago.curacion
+                    if ( proxValor < 100){
+                    this.mago.vida = proxValor
 
                     this.generarLog(this.mago.curacion, valorAtqDragon, true)
+                    } else { return this.mago.vida = 100
+                        }
                 },
                 isAvailable(){
                     const ATQ_MAX_CONT = 2
@@ -113,14 +117,34 @@
                     arrAux.splice(0,0,log2)
                     this.logdeAtaques = arrAux
                 },
-                rendirse(){},
+                sePuedeAtacar(nuevoValorMago,nuevoValorDragon){
+                    if(nuevoValorMago <= 0 ) {
+                        alert("usted a perdido la partida")
+                        return false
+                      }  if (nuevoValorDragon <= 0) {
+                        alert("usted a ganado la partida!!")
+                        return false
+                    }
+                        else {
+                        return true
+                    }
+                },
                 atacar(){
+                    
                     const valorAtqMago = this.atacarPersonaje(this.mago.rangoAtq)
                     const valorAtqDragon = this.atacarPersonaje(this.dragon.rangoAtq)
-                    this.mago.vida = this.mago.vida - valorAtqDragon
-                    this.dragon.vida = this.dragon.vida - valorAtqMago
 
-                    this.generarLog(valorAtqMago, valorAtqDragon)
+                    const nuevoValorMago = this.mago.vida - valorAtqDragon
+                    const nuevoValorDragon = this.dragon.vida - valorAtqMago
+
+                    if (this.sePuedeAtacar(nuevoValorMago,nuevoValorDragon)) {
+                        this.mago.vida = nuevoValorMago
+                        this.dragon.vida = nuevoValorDragon
+
+                        this.generarLog(valorAtqMago, valorAtqDragon)
+                       } 
+
+                   
                     
                 },
                 empezarPartida(){
@@ -128,11 +152,16 @@
                     this.dragon.vida = 100;
                     this.contAtaquesEsp = 0;
                     this.hayUnaPartidaEnJuego = true;
+                    this.logdeAtaques=[];
                 },
                 cssParaLaFila(turno){
                     return turno.esMago ? 'player-turno' : 'monster-turno';
                 },
-                terminarPartida(){},
+                terminarPartida(){
+                    alert ("usted a finalizado el juego")
+                    this.empezarPartida()
+                    this.hayUnaPartidaEnJuego=false
+                },
                 ataqueEspecial(){
                     const valorAtqMago = this.atacarPersonaje(this.mago.atqEspecial)
                     const valorAtqDragon = this.atacarPersonaje(this.dragon.rangoAtq)
